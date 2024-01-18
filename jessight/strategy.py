@@ -14,15 +14,19 @@ class InsightStrategy(Strategy, ABC):
     def __init__(self) -> None:
         super().__init__()
         self._is_initialized = False
-        self.indicator_managers: IndicatorsManager = None
+        self.indicator_managers: IndicatorsManager = IndicatorsManager()
 
-    def initial(self) -> None:
+    def _initial(self) -> None:
         if self._is_initialized:
             return
         self._is_initialized = True
-        self.indicator_managers: IndicatorsManager = IndicatorsManager(
+        self.indicator_managers = IndicatorsManager(
             self.exchange, self.symbol, self.timeframe
         )
+        self.initialize()
+
+    def initialize(self):
+        pass
 
     def before(self) -> None:
         self.initial()

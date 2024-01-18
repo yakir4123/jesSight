@@ -7,7 +7,10 @@ from jessight.indicators.route_indicators import RouteIndicators
 
 class IndicatorsManager:
     def __init__(
-        self, default_exchange: str, default_symbol: str, default_timeframe: str
+        self,
+        default_exchange: str = "",
+        default_symbol: str = "",
+        default_timeframe: str = "",
     ):
         self.default_exchange = default_exchange
         self.default_symbol = default_symbol

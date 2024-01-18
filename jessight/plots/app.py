@@ -19,8 +19,7 @@ from jessight.plots.renderers import (
 
 class App:
     def __init__(self):
-        self.seen_trades_df = st.session_state.get("seen_trades_df", None)
-        self.unseen_trades_df = st.session_state.get("unseen_trades_df", None)
+        self.trades_df = st.session_state.get("trades_df", None)
         self.chosen_file = st.session_state.get("chosen_file", None)
         self.charts_date = st.session_state.get("charts_date", None)
 
@@ -38,14 +37,13 @@ class App:
             return ""
 
     def load_trades_df(self):
-        if self.seen_trades_df is None:
+        if self.trades_df is None:
             df = pd.DataFrame.from_dict(
                 {"dates": ["2021-01-10", "2021-02-11", "2021-03-11", "2021-04-11"]}
             )
             if "seen" not in df.columns:
                 df["seen"] = False
-            self.seen_trades_df = df
-            self.unseen_trades_df = pd.DataFrame(columns=self.seen_trades_df.columns)
+            self.trades_df = df
 
     def browsing_files(self):
         if self.chosen_file is None:
@@ -73,8 +71,8 @@ class App:
         goto_date = self.charts_date or jh.timestamp_to_date(
             insights_data[0]["candles"][22, 0]
         )
-        seen_aggrid = self.trades_manager_aggrid(self.seen_trades_df)
-        selection = seen_aggrid.selected_rows
+        unseen_aggrid = self.trades_manager_aggrid(self.trades_df)
+        selection = unseen_aggrid.selected_rows
         if len(selection) == 1:
             goto_date = selection[0]["dates"]
 
@@ -91,27 +89,9 @@ class App:
             chart = CandleChart(insight, height, col2)
             self.charts.append(chart)
 
-        unseen_aggrid = self.trades_manager_aggrid(self.unseen_trades_df)
-        selection = unseen_aggrid.selected_rows
-        if len(selection) == 1:
-            goto_date = selection[0]["dates"]
-
         for chart in self.charts:
             chart.goto(goto_date)
             chart.plot()
-
-        self.seen_trades_df = pd.concat(
-            [
-                unseen_aggrid.data[unseen_aggrid.data["seen"]],
-                seen_aggrid.data[seen_aggrid.data["seen"]],
-            ]
-        )
-        self.unseen_trades_df = pd.concat(
-            [
-                unseen_aggrid.data[~(unseen_aggrid.data["seen"])],
-                seen_aggrid.data[~(seen_aggrid.data["seen"])],
-            ]
-        )
 
     def trades_manager_aggrid(self, df):
         options = GridOptionsBuilder.from_dataframe(
@@ -162,5 +142,4 @@ if __name__ == "__main__":
     app.run()
     st.session_state.chosen_file = app.chosen_file
     st.session_state.charts_date = app.charts_date
-    st.session_state.seen_trades_df = app.seen_trades_df
-    st.session_state.unseen_trades_df = app.unseen_trades_df
+    st.session_state.trades_df = app.trades_df

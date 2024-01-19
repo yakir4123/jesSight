@@ -22,8 +22,9 @@ class IndicatorsManager:
                 del route["strategy"]
             self._indicators[jh.key(**route)] = RouteIndicators(**route)
 
-    def add(self, indicator: BaseIndicator):
-        self._indicators[indicator.route].add(indicator)
+    def add(self, *indicators: BaseIndicator):
+        for indicator in indicators:
+            self._indicators[indicator.route].add(indicator)
 
     def update(self) -> None:
         for ind in self._indicators.values():

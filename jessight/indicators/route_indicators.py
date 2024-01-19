@@ -17,11 +17,15 @@ class RouteIndicators(CandlesProvider):
             exchange=self.exchange,
             symbol=self.symbol,
             timeframe=self.timeframe,
+            lines=[],
+            markers=[],
+            candles=self.candles,
         )
-        res["candles"] = self.candles
-        res["indicators"] = []
         for indicator in self.indicators.values():
-            res["indicators"] += indicator.insight().values()
+            indicator_insights = indicator.insight()
+            for line in indicator_insights["lines"].values():
+                res["lines"].append(line.to_dict())
+            res["markers"] += indicator_insights["markers"]
         return res
 
     def add(self, indicator: BaseIndicator) -> None:

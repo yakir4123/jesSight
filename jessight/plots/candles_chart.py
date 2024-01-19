@@ -31,18 +31,25 @@ class CandleChart:
         self.set_indicators(insight)
 
     def set_indicators(self, insight: dict):
-        for indicator in insight["indicators"]:
-            if indicator["type"] == "line":
-                chart_ind = self.chart.create_line(**indicator["params"])
-            df = pd.DataFrame.from_dict(
-                {
-                    "time": indicator["timestamps"],
-                    indicator["params"]["name"]: indicator["values"],
-                },
-                orient="columns",
-            )
-            df["time"] = pd.to_datetime(df["time"], unit="ms")
-            chart_ind.set(df)
+        for indicator in insight["lines"]:
+            self.create_line(indicator)
+        for marker in insight["markers"]:
+            self.create_marker(marker)
+
+    def create_marker(self, marker) -> None:
+        self.chart.marker(**marker)
+
+    def create_line(self, indicator) -> None:
+        chart_ind = self.chart.create_line(**indicator["params"])
+        df = pd.DataFrame.from_dict(
+            {
+                "time": indicator["time"],
+                indicator["name"]: indicator["values"],
+            },
+            orient="columns",
+        )
+        df["time"] = pd.to_datetime(df["time"], unit="ms")
+        chart_ind.set(df)
 
     def goto(self, date: str):
         timeframe_in_minute = jh.timeframe_to_one_minutes(self.timeframe)

@@ -23,7 +23,7 @@ class App:
         # self.chosen_file = st.session_state.get("chosen_file", None)
         self.chosen_file = st.session_state.get(
             "chosen_file",
-            "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705653066.pkl",
+            "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705692391.pkl",
         )
         self.charts_date = st.session_state.get("charts_date", None)
 

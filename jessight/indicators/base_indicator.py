@@ -8,10 +8,10 @@ from jessight.candles_provider import CandlesProvider
 class BaseIndicator(CandlesProvider, abc.ABC):
     def __init__(self, exchange: str, symbol: str, timeframe: str):
         super().__init__(exchange, symbol, timeframe)
-        self._chart_params = self._initial_chart_params
-        for key in self._chart_params.keys():
-            self._chart_params[key]["values"] = []
-            self._chart_params[key]["timestamps"] = []
+        self._chart_params = self._initial_chart_params()
+
+    def insight(self) -> dict:
+        return self._chart_params
 
     @property
     @abc.abstractmethod
@@ -68,7 +68,11 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         if isinstance(chart_params, dict):
             chart_params = [chart_params]
         for params in chart_params:
-            indicator_name = params["indicator_name"]
-            del params["indicator_name"]
-            res[indicator_name] = params
+            param_name = params["name"]
+            res[param_name] = {}
+            res[param_name]["values"] = []
+            res[param_name]["timestamps"] = []
+            res[param_name]["type"] = params["type"]
+            del params["type"]
+            res[param_name]["params"] = params
         return res

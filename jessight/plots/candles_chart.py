@@ -28,6 +28,21 @@ class CandleChart:
         self.chart.topbar.textbox("timeframe", self.timeframe)
         self.chart.legend(visible=True)
         self.chart.set(self.df)
+        self.set_indicators(insight)
+
+    def set_indicators(self, insight: dict):
+        for indicator in insight["indicators"]:
+            if indicator["type"] == "line":
+                chart_ind = self.chart.create_line(**indicator["params"])
+            df = pd.DataFrame.from_dict(
+                {
+                    "time": indicator["timestamps"],
+                    indicator["params"]["name"]: indicator["values"],
+                },
+                orient="columns",
+            )
+            df["time"] = pd.to_datetime(df["time"], unit="ms")
+            chart_ind.set(df)
 
     def goto(self, date: str):
         timeframe_in_minute = jh.timeframe_to_one_minutes(self.timeframe)

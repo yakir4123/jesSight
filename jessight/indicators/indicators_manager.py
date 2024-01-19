@@ -1,6 +1,7 @@
 from typing import Union, Optional
 
 import jesse.helpers as jh
+from jesse.routes import router
 from jessight.indicators.base_indicator import BaseIndicator
 from jessight.indicators.route_indicators import RouteIndicators
 
@@ -15,26 +16,32 @@ class IndicatorsManager:
         self.default_exchange = default_exchange
         self.default_symbol = default_symbol
         self.default_timeframe = default_timeframe
-        self.indicators: dict[str, RouteIndicators] = {}
+        self._indicators: dict[str, RouteIndicators] = {}
+        for route in router.all_formatted_routes:
+            if "strategy" in route:
+                del route["strategy"]
+            self._indicators[jh.key(**route)] = RouteIndicators(**route)
 
     def add(self, indicator: BaseIndicator):
-        if indicator.route not in self.indicators:
-            self.indicators[indicator.route] = RouteIndicators(
-                indicator.exchange, indicator.symbol, indicator.timeframe
-            )
-        self.indicators[indicator.route].add(indicator)
+        self._indicators[indicator.route].add(indicator)
 
     def update(self) -> None:
-        for ind in self.indicators.values():
+        for ind in self._indicators.values():
             ind.update()
 
     def draw(self) -> None:
-        for ind in self.indicators.values():
+        for ind in self._indicators.values():
             ind.draw()
 
     def chart_params(self) -> None:
-        for ind in self.indicators.values():
+        for ind in self._indicators.values():
             ind.chart_params()
+
+    def insight(self):
+        res = []
+        for route_ind in self._indicators.values():
+            res.append(route_ind.insight())
+        return res
 
     def __getitem__(self, index: Union[str, tuple]) -> BaseIndicator:
         if isinstance(index, str):
@@ -48,6 +55,12 @@ class IndicatorsManager:
             kwargs["exchange"] = index[-3]
         return self.get(**kwargs)
 
+    def indicators_of(self, route: str) -> Optional[RouteIndicators]:
+        try:
+            return self._indicators[route]
+        except KeyError:
+            return None
+
     def get(
         self,
         name: str,
@@ -59,4 +72,4 @@ class IndicatorsManager:
         symbol = symbol or self.default_symbol
         timeframe = timeframe or self.default_timeframe
         route = jh.key(exchange, symbol, timeframe)
-        return self.indicators[route][name]
+        return self._indicators[route][name]

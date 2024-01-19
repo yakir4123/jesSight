@@ -20,7 +20,11 @@ from jessight.plots.renderers import (
 class App:
     def __init__(self):
         self.trades_df = st.session_state.get("trades_df", None)
-        self.chosen_file = st.session_state.get("chosen_file", None)
+        # self.chosen_file = st.session_state.get("chosen_file", None)
+        self.chosen_file = st.session_state.get(
+            "chosen_file",
+            "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705653066.pkl",
+        )
         self.charts_date = st.session_state.get("charts_date", None)
 
     def latest_insight_file(self):
@@ -48,7 +52,9 @@ class App:
     def browsing_files(self):
         if self.chosen_file is None:
             self.chosen_file = self.latest_insight_file()
-        st.text_input("Insight file - The simulation result", self.chosen_file)
+        self.chosen_file = st.text_input(
+            "Insight file - The simulation result", self.chosen_file
+        )
         clicked = st.button("Choose insight file.")
         if clicked:
             root = tk.Tk()

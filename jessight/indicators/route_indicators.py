@@ -19,6 +19,7 @@ class RouteIndicators(CandlesProvider):
             timeframe=self.timeframe,
             lines=[],
             markers=[],
+            candles_colors=[],
             candles=self.candles,
         )
         for indicator in self.indicators.values():
@@ -26,6 +27,7 @@ class RouteIndicators(CandlesProvider):
             for line in indicator_insights["lines"].values():
                 res["lines"].append(line.to_dict())
             res["markers"] += indicator_insights["markers"]
+            res["candles_colors"] += indicator_insights["candles_colors"]
         return res
 
     def add(self, indicator: BaseIndicator) -> None:

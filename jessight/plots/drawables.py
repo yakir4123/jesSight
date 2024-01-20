@@ -28,6 +28,15 @@ class Marker:
         return self.params
 
 
+class CandleColor:
+    def __init__(self, value: str):
+        self.value = value
+        self.time = 0
+
+    def to_dict(self):
+        return {"value": self.value, "time": self.time}
+
+
 class Line:
     def __init__(
         self,
@@ -62,4 +71,4 @@ class Line:
 
 
 ConfigurableIndicator = Union[Line]
-Drawable = Union[LinePoint, Marker]
+Drawable = Union[LinePoint, Marker, CandleColor]

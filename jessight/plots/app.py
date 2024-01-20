@@ -21,10 +21,10 @@ class App:
     def __init__(self):
         self.trades_df = st.session_state.get("trades_df", None)
         self.chosen_file = st.session_state.get("chosen_file", None)
-        self.chosen_file = st.session_state.get(
-            "chosen_file",
-            "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705770032.pkl",
-        )
+        # self.chosen_file = st.session_state.get(
+        #     "chosen_file",
+        #     "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705775609.pkl",
+        # )
         self.charts_date = st.session_state.get("charts_date", None)
 
     def latest_insight_file(self):
@@ -82,7 +82,6 @@ class App:
         if len(selection) == 1:
             goto_date = selection[0]["datetime"]
 
-        print(n_of_charts)
         if n_of_charts % 2 == 1:
             chart = CandleChart(indicators_data[0], height)
             self.charts.append(chart)

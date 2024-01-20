@@ -9,6 +9,7 @@ from jessight.plots.drawables import (
     Drawable,
     Marker,
     LinePoint,
+    CandleColor,
 )
 
 
@@ -45,6 +46,12 @@ class BaseIndicator(CandlesProvider, abc.ABC):
                 self._draw_line(value)
             if isinstance(value, Marker):
                 self._draw_marker(value)
+            if isinstance(value, CandleColor):
+                self._draw_candle_color(value)
+
+    def _draw_candle_color(self, value: CandleColor) -> None:
+        value.time = self.get_draw_timestamp()
+        self._chart_params["candles_colors"].append(value.to_dict())
 
     def _draw_marker(self, value: Marker) -> None:
         value.params["time"] = self.get_draw_timestamp()
@@ -84,7 +91,7 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         as the key of the params
         """
         chart_params = self.chart_params()
-        res = {"markers": [], "lines": {}}
+        res = {"markers": [], "lines": {}, "candles_colors": []}
         if chart_params is None:
             return res
         if isinstance(chart_params, ConfigurableIndicator):

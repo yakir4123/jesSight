@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import jesse.helpers as jh
 
@@ -15,6 +16,7 @@ class CandleChart:
             insight["candles"],
             columns=["date", "open", "close", "high", "low", "volume"],
         )
+        self._set_candles_colors(insight)
         self.df["date"] = pd.to_datetime(self.df["date"], unit="ms").dt.strftime(
             "%Y-%m-%d %H:%M:%S"
         )
@@ -23,14 +25,33 @@ class CandleChart:
         self.symbol = insight["symbol"]
         self.timeframe = insight["timeframe"]
         self.chart = StreamlitChart(height=height)
+        self._set_chart(insight)
+        self._set_indicators(insight)
+
+    def _set_chart(self, insight: dict):
         self.chart.topbar.textbox("exchange", self.exchange)
         self.chart.topbar.textbox("symbol", self.symbol)
         self.chart.topbar.textbox("timeframe", self.timeframe)
         self.chart.legend(visible=True)
         self.chart.set(self.df)
-        self.set_indicators(insight)
 
-    def set_indicators(self, insight: dict):
+    def _set_candles_colors(self, insight: dict):
+        if len(insight["candles_colors"]) == 0:
+            return
+
+        self.df["color"] = "rgba(39, 157, 130, 100)"
+        self.df.loc[
+            self.df["close"] < self.df["open"], "color"
+        ] = "rgba(200, 97, 100, 100)"
+        colors_df = pd.DataFrame(insight["candles_colors"])
+        colors_df.rename(columns={"time": "date", "value": "color"}, inplace=True)
+        merged_df = pd.merge(
+            self.df, colors_df, on="date", how="left", suffixes=("_df1", "_df2")
+        )
+        resulting_colors = merged_df["color_df2"].combine_first(merged_df["color_df1"])
+        self.df["color"] = resulting_colors
+
+    def _set_indicators(self, insight: dict):
         for indicator in insight["lines"]:
             self.create_line(indicator)
         insight["markers"].sort(key=lambda x: x["time"])

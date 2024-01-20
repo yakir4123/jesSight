@@ -32,13 +32,20 @@ class RouteIndicators(CandlesProvider):
         self.indicators[indicator.name] = indicator
 
     def update(self) -> None:
+        if not self.is_new_candle:
+            return
         for ind in self.indicators.values():
             ind.update()
 
     def draw(self) -> None:
+        if not self.is_new_candle:
+            return
         for ind in self.indicators.values():
             ind._draw()
 
     def chart_params(self) -> None:
         for ind in self.indicators.values():
             ind.chart_params()
+
+    def __iter__(self):
+        return iter(self.indicators.items())

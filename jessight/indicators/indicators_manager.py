@@ -74,3 +74,8 @@ class IndicatorsManager:
         timeframe = timeframe or self.default_timeframe
         route = jh.key(exchange, symbol, timeframe)
         return self._indicators[route][name]
+
+    def __iter__(self):
+        for _, indicators in self._indicators.items():
+            for _, indicator in indicators:
+                yield indicator

@@ -1,7 +1,7 @@
-import glob
 import os
 import pickle
 import tkinter as tk
+from pathlib import Path
 
 import pandas as pd
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode
@@ -20,19 +20,20 @@ from jessight.plots.renderers import (
 class App:
     def __init__(self):
         self.trades_df = st.session_state.get("trades_df", None)
-        # self.chosen_file = st.session_state.get("chosen_file", None)
+        self.chosen_file = st.session_state.get("chosen_file", None)
         self.chosen_file = st.session_state.get(
             "chosen_file",
-            "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705692391.pkl",
+            "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705770032.pkl",
         )
         self.charts_date = st.session_state.get("charts_date", None)
 
     def latest_insight_file(self):
         try:
-            list_of_files = glob.glob("storage\insights\*")
-            return max(list_of_files, key=os.path.getctime)
+            path = Path("storage/insights")
+            list_of_files = path.glob("*.pkl")
+            return max(list_of_files, key=os.path.getctime).absolute()
         except ValueError:
-            return ""
+            return os.getcwd()
 
     def filename(self):
         try:
@@ -40,14 +41,11 @@ class App:
         except FileNotFoundError:
             return ""
 
-    def load_trades_df(self):
-        if self.trades_df is None:
-            df = pd.DataFrame.from_dict(
-                {"dates": ["2021-01-10", "2021-02-11", "2021-03-11", "2021-04-11"]}
-            )
-            if "seen" not in df.columns:
-                df["seen"] = False
-            self.trades_df = df
+    def load_trades_df(self, insight_trades: dict):
+        df = pd.DataFrame.from_dict(insight_trades, orient="index")
+        if "seen" not in df.columns:
+            df.insert(loc=0, column="seen", value=False)
+        self.trades_df = df
 
     def browsing_files(self):
         if self.chosen_file is None:
@@ -67,31 +65,34 @@ class App:
                 self.insights_data = pickle.load(f)
 
     def load_charts(self):
-        n_of_charts = len(self.insights_data)
-        height = 600 if n_of_charts == 1 else 400
+        insights_data = self.insights_data
+        self.load_trades_df(insights_data["trades"])
+        unseen_aggrid = self.trades_manager_aggrid(self.trades_df)
+
         # main_chart
         self.charts = []
-        insights_data = self.insights_data
-        self.load_trades_df()
+        indicators_data = insights_data["indicators"]
+        n_of_charts = len(indicators_data)
+        height = 600 if n_of_charts == 1 else 400
 
         goto_date = self.charts_date or jh.timestamp_to_date(
-            insights_data[0]["candles"][22, 0]
+            indicators_data[0]["candles"][22, 0]
         )
-        unseen_aggrid = self.trades_manager_aggrid(self.trades_df)
         selection = unseen_aggrid.selected_rows
         if len(selection) == 1:
-            goto_date = selection[0]["dates"]
+            goto_date = selection[0]["datetime"]
 
+        print(n_of_charts)
         if n_of_charts % 2 == 1:
-            chart = CandleChart(insights_data[0], height)
+            chart = CandleChart(indicators_data[0], height)
             self.charts.append(chart)
-            insights_data = self.insights_data[1:]
+            indicators_data = indicators_data[1:]
 
         col1, col2 = st.columns((1, 1))
-        for insight in insights_data[::2]:
+        for insight in indicators_data[::2]:
             chart = CandleChart(insight, height, col1)
             self.charts.append(chart)
-        for insight in insights_data[1::2]:
+        for insight in indicators_data[1::2]:
             chart = CandleChart(insight, height, col2)
             self.charts.append(chart)
 

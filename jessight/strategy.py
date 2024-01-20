@@ -24,7 +24,12 @@ class InsightStrategy(Strategy, ABC):
         self.indicator_managers = IndicatorsManager(
             self.exchange, self.symbol, self.timeframe
         )
-        self.trades_writer = TradesWriter(self.exchange, self.symbol, self.timeframe)
+        self.trades_writer = TradesWriter(
+            self.exchange,
+            self.symbol,
+            self.timeframe,
+            indicators_managers=self.indicator_managers,
+        )
         self.initialize()
 
     def initialize(self):
@@ -48,4 +53,8 @@ class InsightStrategy(Strategy, ABC):
             pickle.dump(insight, f)
 
     def insight(self):
-        return self.indicator_managers.insight()
+        res = {
+            "indicators": self.indicator_managers.insight(),
+            "trades": self.trades_writer.to_dict(),
+        }
+        return res

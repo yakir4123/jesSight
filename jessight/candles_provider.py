@@ -11,6 +11,7 @@ class CandlesProvider:
         self.exchange = exchange
         self.symbol = symbol
         self.timeframe = timeframe
+        self.timeframe_in_1ms = jh.timeframe_to_one_minutes(self.timeframe) * 60_000
 
     @property
     def route(self):
@@ -31,6 +32,10 @@ class CandlesProvider:
     @property
     def time(self) -> int:
         return store.app.time
+
+    @property
+    def is_new_candle(self) -> bool:
+        return (self.time % self.timeframe_in_1ms) == 0
 
     @property
     def open(self) -> float:

@@ -1,9 +1,9 @@
-from typing import Optional
-
 import pandas as pd
-from streamlit.delta_generator import DeltaGenerator
-
 import jesse.helpers as jh
+
+from typing import Optional
+from dateutil import parser
+from streamlit.delta_generator import DeltaGenerator
 from lightweight_charts.widgets import StreamlitChart
 
 
@@ -33,6 +33,7 @@ class CandleChart:
     def set_indicators(self, insight: dict):
         for indicator in insight["lines"]:
             self.create_line(indicator)
+        insight["markers"].sort(key=lambda x: x["time"])
         for marker in insight["markers"]:
             self.create_marker(marker)
 
@@ -52,8 +53,8 @@ class CandleChart:
         chart_ind.set(df)
 
     def goto(self, date: str):
+        timestamp = parser.parse(date).timestamp() * 1000
         timeframe_in_minute = jh.timeframe_to_one_minutes(self.timeframe)
-        timestamp = jh.date_to_timestamp(date)
         arrow_time = jh.timestamp_to_arrow(timestamp)
         self.chart.set_visible_range(
             arrow_time.shift(minutes=-22 * timeframe_in_minute).format(

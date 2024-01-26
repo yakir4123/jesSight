@@ -1,16 +1,23 @@
-import numpy as np
 import pandas as pd
 import jesse.helpers as jh
 
 from typing import Optional
 from dateutil import parser
 from streamlit.delta_generator import DeltaGenerator
+
+from lightweight_charts.util import jbool, line_style
 from lightweight_charts.widgets import StreamlitChart
+from lightweight_charts.abstract import Line
 
 
 class CandleChart:
     def __init__(
-        self, insight: dict, height: int, col: Optional[DeltaGenerator] = None
+        self,
+        insight: dict,
+        height: int,
+        col: Optional[DeltaGenerator] = None,
+        take_profits: Optional[dict] = None,
+        stop_losses: Optional[dict] = None,
     ):
         self.df = pd.DataFrame(
             insight["candles"],
@@ -25,10 +32,15 @@ class CandleChart:
         self.symbol = insight["symbol"]
         self.timeframe = insight["timeframe"]
         self.chart = StreamlitChart(height=height)
-        self._set_chart(insight)
+        self._set_chart()
         self._set_indicators(insight)
 
-    def _set_chart(self, insight: dict):
+        take_profits = take_profits or {}
+        stop_losses = stop_losses or {}
+        self._add_tp_lines(take_profits)
+        self._add_sl_lines(stop_losses)
+
+    def _set_chart(self):
         self.chart.topbar.textbox("exchange", self.exchange)
         self.chart.topbar.textbox("symbol", self.symbol)
         self.chart.topbar.textbox("timeframe", self.timeframe)
@@ -72,6 +84,34 @@ class CandleChart:
         )
         df["time"] = pd.to_datetime(df["time"], unit="ms")
         chart_ind.set(df)
+
+    def _add_tp_lines(self, take_profits):
+        for line_id, tps in take_profits.items():
+            chart_ind = self.chart.create_line(
+                color="lime",
+                name=f"tp: {line_id}",
+                style="dashed",
+                width=1,
+                price_line=False,
+                price_label=False,
+            )
+            df = pd.DataFrame(tps, columns=["time", f"tp: {line_id}"])
+            df["time"] = pd.to_datetime(df["time"], unit="ms")
+            chart_ind.set(df)
+
+    def _add_sl_lines(self, stop_losses):
+        for line_id, sls in stop_losses.items():
+            chart_ind = self.chart.create_line(
+                color="#CD5C5C",
+                name=f"sl: {line_id}",
+                style="dashed",
+                width=1,
+                price_line=False,
+                price_label=False,
+            )
+            df = pd.DataFrame(sls, columns=["time", f"sl: {line_id}"])
+            df["time"] = pd.to_datetime(df["time"], unit="ms")
+            chart_ind.set(df)
 
     def goto(self, date: str):
         timestamp = parser.parse(date).timestamp() * 1000

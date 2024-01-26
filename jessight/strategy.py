@@ -3,6 +3,8 @@ import pickle
 from abc import ABC
 from pathlib import Path
 
+import numpy as np
+
 from jesse.models import Order
 from jesse.strategies import Strategy
 from jessight.indicators.indicators_manager import IndicatorsManager
@@ -48,6 +50,8 @@ class InsightStrategy(Strategy, ABC):
             take_profit=self.take_profit,
             stop_loss=self.stop_loss,
         )
+        self.trades_writer.set_take_profits(self.take_profit)
+        self.trades_writer.set_stop_losses(self.stop_loss)
         self.trades_writer.indicators_snapshot()
 
     def go_short(self) -> None:
@@ -59,6 +63,8 @@ class InsightStrategy(Strategy, ABC):
             take_profit=self.take_profit,
             stop_loss=self.stop_loss,
         )
+        self.trades_writer.set_take_profits(self.take_profit)
+        self.trades_writer.set_stop_losses(self.stop_loss)
         self.trades_writer.indicators_snapshot()
 
     def on_cancel(self) -> None:
@@ -75,20 +81,25 @@ class InsightStrategy(Strategy, ABC):
         )
         self.trades_writer.indicators_snapshot()
 
-    # def update_position(self) -> None:
-    #     self.trades_writer.write(
-    #         event="update_position",
-    #         entry=self.sell,
-    #         take_profit=self.take_profit,
-    #         stop_loss=self.stop_loss,
-    #     )
-    #     self.trades_writer.indicators_snapshot()
+    def update_position(self) -> None:
+        if not self.is_position_updated:
+            return
+        self.trades_writer.write(
+            event="update_position",
+            entry=self.sell,
+            take_profit=self.take_profit,
+            stop_loss=self.stop_loss,
+        )
+        self.trades_writer.set_take_profits(self.take_profit)
+        self.trades_writer.set_stop_losses(self.stop_loss)
+        self.trades_writer.indicators_snapshot()
 
     def on_close_position(self, order: Order) -> None:
         self.trades_writer.write_trade_number()
-        self.trades_writer.write(
-            event="on_tp_close" if order.is_take_profit else "on_sl_close",
-        )
+        if order.is_take_profit:
+            self.trades_writer.write(event="on_tp_close", take_profit=order.price)
+        else:
+            self.trades_writer.write(event="on_sl_close", stop_loss=order.price)
         self.trades_writer.indicators_snapshot()
 
     def terminate(self):
@@ -107,3 +118,18 @@ class InsightStrategy(Strategy, ABC):
             "trades": self.trades_writer.to_dict(),
         }
         return res
+
+    @property
+    def is_position_updated(self) -> bool:
+        if self.position.is_close:
+            return False
+
+        if self.is_long and not np.array_equal(self.buy, self._buy):
+            return True
+
+        if self.is_short and not np.array_equal(self.sell, self._sell):
+            return True
+
+        return np.array_equal(self.take_profit, self._take_profit) or np.array_equal(
+            self.stop_loss, self._stop_loss
+        )

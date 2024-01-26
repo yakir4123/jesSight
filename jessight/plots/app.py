@@ -50,7 +50,7 @@ class App:
         if self.insights_data is None:
             return
         insights_data = self.insights_data
-        self.load_trades_df(insights_data["trades"])
+        self.load_trades_df(insights_data["trades"]["trades_snapshot"])
         unseen_aggrid = self.trades_manager_aggrid(self.trades_df)
 
         # main_chart
@@ -67,16 +67,33 @@ class App:
             goto_date = selection[0]["datetime"]
 
         if n_of_charts % 2 == 1:
-            chart = CandleChart(indicators_data[0], height)
+            chart = CandleChart(
+                indicators_data[0],
+                height,
+                take_profits=self.insights_data["trades"]["take-profits"],
+                stop_losses=self.insights_data["trades"]["stop-losses"],
+            )
             self.charts.append(chart)
             indicators_data = indicators_data[1:]
 
         col1, col2 = st.columns((1, 1))
         for insight in indicators_data[::2]:
-            chart = CandleChart(insight, height, col1)
+            chart = CandleChart(
+                insight,
+                height,
+                col1,
+                take_profits=self.insights_data["trades"]["take-profits"],
+                stop_losses=self.insights_data["trades"]["stop-losses"],
+            )
             self.charts.append(chart)
         for insight in indicators_data[1::2]:
-            chart = CandleChart(insight, height, col2)
+            chart = CandleChart(
+                insight,
+                height,
+                col2,
+                take_profits=self.insights_data["trades"]["take-profits"],
+                stop_losses=self.insights_data["trades"]["stop-losses"],
+            )
             self.charts.append(chart)
 
         for chart in self.charts:

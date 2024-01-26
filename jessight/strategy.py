@@ -1,10 +1,9 @@
-import os
 import time
 import pickle
-import subprocess
 from abc import ABC
 from pathlib import Path
 
+from jesse.models import Order
 from jesse.strategies import Strategy
 from jessight.indicators.indicators_manager import IndicatorsManager
 from jessight.utils.trades_writer import TradesWriter
@@ -40,10 +39,60 @@ class InsightStrategy(Strategy, ABC):
         self.indicator_managers.update()
         self.indicator_managers.draw()
 
+    def go_long(self) -> None:
+        self.trades_writer.new_trade()
+        self.trades_writer.write_trade_number()
+        self.trades_writer.write(
+            event="go_long",
+            entry=self.buy,
+            take_profit=self.take_profit,
+            stop_loss=self.stop_loss,
+        )
+        self.trades_writer.indicators_snapshot()
+
+    def go_short(self) -> None:
+        self.trades_writer.new_trade()
+        self.trades_writer.write_trade_number()
+        self.trades_writer.write(
+            event="go_short",
+            entry=self.sell,
+            take_profit=self.take_profit,
+            stop_loss=self.stop_loss,
+        )
+        self.trades_writer.indicators_snapshot()
+
+    def on_cancel(self) -> None:
+        self.trades_writer.write_trade_number()
+        self.trades_writer.write(
+            event="on_cancel",
+        )
+        self.trades_writer.indicators_snapshot()
+
+    def on_open_position(self, order: Order) -> None:
+        self.trades_writer.write_trade_number()
+        self.trades_writer.write(
+            event="on_open_position",
+        )
+        self.trades_writer.indicators_snapshot()
+
+    # def update_position(self) -> None:
+    #     self.trades_writer.write(
+    #         event="update_position",
+    #         entry=self.sell,
+    #         take_profit=self.take_profit,
+    #         stop_loss=self.stop_loss,
+    #     )
+    #     self.trades_writer.indicators_snapshot()
+
+    def on_close_position(self, order: Order) -> None:
+        self.trades_writer.write_trade_number()
+        self.trades_writer.write(
+            event="on_tp_close" if order.is_take_profit else "on_sl_close",
+        )
+        self.trades_writer.indicators_snapshot()
+
     def terminate(self):
         self._save_insight_file()
-        path = Path(os.path.dirname(os.path.abspath(__file__)))
-        # subprocess.run(["streamlit", "run", path / "plots" / "app.py"])
 
     def _save_insight_file(self):
         insight = self.insight()

@@ -15,16 +15,17 @@ from jessight.plots.candles_chart import CandleChart
 from jessight.plots.renderers import (
     checkbox_renderer,
 )
+from jessight.plots.trades_table import draw_grid
 
 
 class App:
     def __init__(self):
         self.trades_df = st.session_state.get("trades_df", None)
-        self.chosen_file = st.session_state.get("chosen_file", None)
-        # self.chosen_file = st.session_state.get(
-        #     "chosen_file",
-        #     "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705775609.pkl",
-        # )
+        # self.chosen_file = st.session_state.get("chosen_file", None)
+        self.chosen_file = st.session_state.get(
+            "chosen_file",
+            "/Users/yakir/PycharmProjects/VolumeStrike/storage/insights/1705775609.pkl",
+        )
         self.charts_date = st.session_state.get("charts_date", None)
 
     def latest_insight_file(self):
@@ -43,8 +44,8 @@ class App:
 
     def load_trades_df(self, insight_trades: dict):
         df = pd.DataFrame.from_dict(insight_trades, orient="index")
-        if "seen" not in df.columns:
-            df.insert(loc=0, column="seen", value=False)
+        if "Viewed" not in df.columns:
+            df.insert(loc=0, column="Viewed", value=False)
         self.trades_df = df
 
     def browsing_files(self):
@@ -100,22 +101,29 @@ class App:
             chart.plot()
 
     def trades_manager_aggrid(self, df):
-        options = GridOptionsBuilder.from_dataframe(
-            df, enableRowGroup=True, enableValue=True, enablePivot=True
-        )
-        options.configure_column("seen", editable=True, cellRenderer=checkbox_renderer)
-        options.configure_side_bar()
-
-        options.configure_selection("single")
-        aggrid = AgGrid(
-            df,
-            enable_enterprise_modules=True,
-            gridOptions=options.build(),
-            update_mode=GridUpdateMode.MODEL_CHANGED,
-            allow_unsafe_jscode=True,
-        )
-
+        aggrid = draw_grid(df)
         return aggrid
+        # options = GridOptionsBuilder.from_dataframe(
+        #     df, enableRowGroup=True, enableValue=True, enablePivot=True
+        # )
+        # options.configure_column(
+        #     "seen",
+        #     editable=True,
+        #     cellRenderer=checkbox_renderer,
+        # )
+        # options.configure_auto_height()
+        # options.configure_side_bar()
+        #
+        # options.configure_selection("single")
+        # aggrid = AgGrid(
+        #     df,
+        #     enable_enterprise_modules=True,
+        #     gridOptions=options.build(),
+        #     update_mode=GridUpdateMode.MODEL_CHANGED,
+        #     allow_unsafe_jscode=True,
+        # )
+        #
+        # return aggrid
 
     def change_charts_date(self, date: str) -> None:
         self.charts_date = date

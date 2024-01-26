@@ -43,7 +43,7 @@ class InsightStrategy(Strategy, ABC):
     def terminate(self):
         self._save_insight_file()
         path = Path(os.path.dirname(os.path.abspath(__file__)))
-        subprocess.run(["streamlit", "run", path / "plots" / "app.py"])
+        # subprocess.run(["streamlit", "run", path / "plots" / "app.py"])
 
     def _save_insight_file(self):
         insight = self.insight()

@@ -133,9 +133,11 @@ class InsightStrategy(Strategy, ABC):
         if self.is_short and not np.array_equal(self.sell, self._sell):
             return True
 
-        return np.array_equal(self.take_profit, self._take_profit) or np.array_equal(
-            self.stop_loss, self._stop_loss
-        )
+        if not np.array_equal(self.take_profit, self._take_profit):
+            return True
+        if not np.array_equal(self.stop_loss, self._stop_loss):
+            return True
+        return False
 
     def update_lazy_indicators(self) -> None:
         self.indicator_managers.update_lazy_indicators()

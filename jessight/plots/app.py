@@ -60,7 +60,7 @@ class App:
         height = 600 if n_of_charts == 1 else 400
 
         goto_date = self.charts_date or jh.timestamp_to_date(
-            indicators_data[0]["candles"][22, 0]
+            self.insights_data["start_simulation_timestamp"]
         )
         selection = unseen_aggrid.selected_rows
         if len(selection) == 1:

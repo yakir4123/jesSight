@@ -69,6 +69,11 @@ class CandleChart:
         insight["markers"].sort(key=lambda x: x["time"])
         for marker in insight["markers"]:
             self.create_marker(marker)
+        for trend_line in insight["trend_line"]:
+            self.create_trend_line(trend_line)
+
+    def create_trend_line(self, trend_line) -> None:
+        self.chart.trend_line(**trend_line)
 
     def create_marker(self, marker) -> None:
         self.chart.marker(**marker)

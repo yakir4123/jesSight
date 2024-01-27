@@ -17,6 +17,8 @@ class IndicatorsManager:
         self.default_symbol = default_symbol
         self.default_timeframe = default_timeframe
         self._indicators: dict[str, RouteIndicators] = {}
+        self._is_draw_lazy_indicators: bool = False
+        self._is_updated_lazy_indicators: bool = False
         for route in router.all_formatted_routes:
             if "strategy" in route:
                 del route["strategy"]
@@ -27,12 +29,28 @@ class IndicatorsManager:
             self._indicators[indicator.route].add(indicator)
 
     def update(self) -> None:
+        self._is_draw_lazy_indicators = False
+        self._is_updated_lazy_indicators = False
         for ind in self._indicators.values():
             ind.update()
+
+    def update_lazy_indicators(self) -> None:
+        if self._is_updated_lazy_indicators:
+            return
+        self._is_updated_lazy_indicators = True
+        for ind in self._indicators.values():
+            ind.update(is_lazy=True)
 
     def draw(self) -> None:
         for ind in self._indicators.values():
             ind.draw()
+
+    def draw_lazy_indicators(self) -> None:
+        if self._is_draw_lazy_indicators:
+            return
+        self._is_draw_lazy_indicators = True
+        for ind in self._indicators.values():
+            ind.draw(is_lazy=True)
 
     def chart_params(self) -> None:
         for ind in self._indicators.values():

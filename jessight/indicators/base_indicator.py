@@ -10,21 +10,24 @@ from jessight.plots.drawables import (
     Marker,
     LinePoint,
     CandleColor,
+    TrendLine,
 )
 
 
 class BaseIndicator(CandlesProvider, abc.ABC):
-    def __init__(self, exchange: str, symbol: str, timeframe: str):
+    def __init__(
+        self, exchange: str, symbol: str, timeframe: str, is_lazy: bool = False
+    ):
         super().__init__(exchange, symbol, timeframe)
         self._chart_params = self._initial_chart_params()
+        self.is_lazy = is_lazy
 
     def insight(self) -> dict:
         return self._chart_params
 
     @property
-    @abc.abstractmethod
     def name(self) -> str:
-        ...
+        return self.__class__.__name__
 
     @abc.abstractmethod
     def update(self) -> None:
@@ -48,10 +51,16 @@ class BaseIndicator(CandlesProvider, abc.ABC):
                 self._draw_marker(value)
             if isinstance(value, CandleColor):
                 self._draw_candle_color(value)
+            if isinstance(value, TrendLine):
+                self._draw_trend_line(value)
 
     def _draw_candle_color(self, value: CandleColor) -> None:
         value.time = self.get_draw_timestamp()
         self._chart_params["candles_colors"].append(value.to_dict())
+
+    def _draw_trend_line(self, value: TrendLine) -> None:
+        # value.time = self.get_draw_timestamp()
+        self._chart_params["trend_line"].append(value.to_dict())
 
     def _draw_marker(self, value: Marker) -> None:
         value.params["time"] = self.get_draw_timestamp()
@@ -91,7 +100,7 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         as the key of the params
         """
         chart_params = self.chart_params()
-        res = {"markers": [], "lines": {}, "candles_colors": []}
+        res = {"markers": [], "lines": {}, "candles_colors": [], "trend_line": []}
         if chart_params is None:
             return res
         if isinstance(chart_params, ConfigurableIndicator):

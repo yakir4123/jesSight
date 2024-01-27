@@ -17,10 +17,12 @@ class InsightStrategy(Strategy, ABC):
         self._is_initialized = False
         self.indicator_managers: IndicatorsManager = None  # type: ignore
         self.trades_writer: TradesWriter = None  # type: ignore
+        self.start_simulation_timestamp: float = 0
 
     def _initialize(self) -> None:
         if self._is_initialized:
             return
+        self.start_simulation_timestamp = self.time
         self._is_initialized = True
         self.indicator_managers = IndicatorsManager(
             self.exchange, self.symbol, self.timeframe
@@ -116,6 +118,7 @@ class InsightStrategy(Strategy, ABC):
         res = {
             "indicators": self.indicator_managers.insight(),
             "trades": self.trades_writer.to_dict(),
+            "start_simulation_timestamp": self.start_simulation_timestamp,
         }
         return res
 
@@ -133,3 +136,7 @@ class InsightStrategy(Strategy, ABC):
         return np.array_equal(self.take_profit, self._take_profit) or np.array_equal(
             self.stop_loss, self._stop_loss
         )
+
+    def update_lazy_indicators(self) -> None:
+        self.indicator_managers.update_lazy_indicators()
+        self.indicator_managers.draw_lazy_indicators()

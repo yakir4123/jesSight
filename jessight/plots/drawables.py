@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Union
 
+import pandas as pd
 from lightweight_charts.util import LINE_STYLE, MARKER_POSITION, MARKER_SHAPE, NUM
 
 
@@ -37,6 +38,40 @@ class CandleColor:
         return {"value": self.value, "time": self.time}
 
 
+class TrendLine:
+    def __init__(
+        self,
+        start_time: float,
+        start_value: float,
+        end_time: float,
+        end_value: float,
+        round: bool = False,
+        color: str = "#1E80F0",
+        width: int = 2,
+        style: LINE_STYLE = "solid",
+    ):
+        self.start_time = start_time
+        self.start_value = start_value
+        self.end_time = end_time
+        self.end_value = end_value
+        self.round = round
+        self.color = color
+        self.width = width
+        self.style = style
+
+    def to_dict(self):
+        return {
+            "start_time": pd.to_datetime(self.start_time, unit="ms"),
+            "start_value": self.start_value,
+            "end_time": pd.to_datetime(self.end_time, unit="ms"),
+            "end_value": self.end_value,
+            "round": self.round,
+            "color": self.color,
+            "width": self.width,
+            "style": self.style,
+        }
+
+
 class Line:
     def __init__(
         self,
@@ -44,8 +79,8 @@ class Line:
         color: str = "rgba(214, 237, 255, 0.6)",
         style: LINE_STYLE = "solid",
         width: int = 2,
-        price_line: bool = True,
-        price_label: bool = True,
+        price_line: bool = False,
+        price_label: bool = False,
     ):
         self.name = name
         self.params = dict(
@@ -71,4 +106,4 @@ class Line:
 
 
 ConfigurableIndicator = Union[Line]
-Drawable = Union[LinePoint, Marker, CandleColor]
+Drawable = Union[LinePoint, Marker, CandleColor, TrendLine]

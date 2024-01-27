@@ -19,6 +19,7 @@ class RouteIndicators(CandlesProvider):
             timeframe=self.timeframe,
             lines=[],
             markers=[],
+            trend_line=[],
             candles_colors=[],
             candles=self.candles,
         )
@@ -27,23 +28,26 @@ class RouteIndicators(CandlesProvider):
             for line in indicator_insights["lines"].values():
                 res["lines"].append(line.to_dict())
             res["markers"] += indicator_insights["markers"]
+            res["trend_line"] += indicator_insights["trend_line"]
             res["candles_colors"] += indicator_insights["candles_colors"]
         return res
 
     def add(self, indicator: BaseIndicator) -> None:
         self.indicators[indicator.name] = indicator
 
-    def update(self) -> None:
+    def update(self, is_lazy=False) -> None:
         if not self.is_new_candle:
             return
         for ind in self.indicators.values():
-            ind.update()
+            if is_lazy == ind.is_lazy:
+                ind.update()
 
-    def draw(self) -> None:
+    def draw(self, is_lazy: bool = False) -> None:
         if not self.is_new_candle:
             return
         for ind in self.indicators.values():
-            ind._draw()
+            if ind.is_lazy == is_lazy:
+                ind._draw()
 
     def chart_params(self) -> None:
         for ind in self.indicators.values():

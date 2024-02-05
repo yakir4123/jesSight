@@ -1,3 +1,4 @@
 jesse
 streamlit
 streamlit-aggrid
+numpy

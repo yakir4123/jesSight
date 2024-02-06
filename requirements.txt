@@ -2,3 +2,6 @@ jesse
 streamlit
 streamlit-aggrid
 numpy
+lightweight_charts
+pandas
+dateutil

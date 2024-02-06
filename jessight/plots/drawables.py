@@ -4,6 +4,9 @@ from typing import Union
 import pandas as pd
 from lightweight_charts.util import LINE_STYLE, MARKER_POSITION, MARKER_SHAPE, NUM
 
+# TODO: Come up with a better solution for the to_dict method, its not makes sense that the caller
+#       should know all the hardcoded fields, at least create static class variables for those hardcoded fields
+
 
 class LinePoint:
     def __init__(self, name: str, value: NUM):
@@ -21,13 +24,23 @@ class Marker:
         color: str = "#2196F3",
         text: str = "",
     ):
-        self.params = dict(time=time, position=position, shape=shape, color=color, text=text)
+        self.time = time
+        self.position = position
+        self.shape = shape
+        self.color = color
+        self.text = text
 
     def set_timestamp(self, timestamp: int) -> None:
-        self.params["time"] = datetime.utcfromtimestamp(timestamp)
+        self.time = datetime.utcfromtimestamp(timestamp)
 
     def to_dict(self):
-        return self.params
+        return {
+            "time": self.time,
+            "position": self.position,
+            "shape": self.shape,
+            "color": self.color,
+            "text": self.text
+        }
 
 
 class CandleColor:

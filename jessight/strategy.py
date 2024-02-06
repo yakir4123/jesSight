@@ -22,17 +22,18 @@ class InsightStrategy(Strategy, ABC):
     def _initialize(self) -> None:
         if self._is_initialized:
             return
+
         self.start_simulation_timestamp = self.time
         self._is_initialized = True
-        self.indicator_managers = IndicatorsManager(
-            self.exchange, self.symbol, self.timeframe
-        )
+        self.indicator_managers = IndicatorsManager(self.exchange, self.symbol, self.timeframe)
+
         self.trades_writer = TradesWriter(
             self.exchange,
             self.symbol,
             self.timeframe,
             indicators_managers=self.indicator_managers,
         )
+        # Why is it here? not makes sense to call the global func from private like that, in addition it does nothing
         self.initialize()
 
     def initialize(self):

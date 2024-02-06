@@ -40,6 +40,10 @@ class BaseIndicator(CandlesProvider, abc.ABC):
     def state(self) -> dict[str, Any]:
         ...
 
+    # TODO: Refactor, this class should not have 2 draw methods and api clients should not call _draw private method
+    def draw_indicator(self) -> None:
+        self._draw()
+
     def _draw(self) -> None:
         values = self.draw()
 

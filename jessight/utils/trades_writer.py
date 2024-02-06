@@ -10,14 +10,9 @@ from jessight.utils.csv_writer import CSVWriter
 
 
 class TradesWriter(CandlesProvider):
-    def __init__(
-        self,
-        exchange,
-        symbol,
-        timeframe,
-        indicators_managers: IndicatorsManager,
-    ):
+    def __init__(self, exchange, symbol, timeframe, indicators_managers: IndicatorsManager):
         super().__init__(exchange, symbol, timeframe)
+
         self.indicators_managers = indicators_managers
         self.csv_writer = CSVWriter()
         self.curr_write_time = -1
@@ -28,13 +23,11 @@ class TradesWriter(CandlesProvider):
         self.stop_losses = {}
 
     def indicators_snapshot(self) -> None:
-        indicators_states = dict(
-            time=self.time, datetime=jh.timestamp_to_time(self.time), price=self.price
-        )
+        indicators_states = dict(time=self.time, datetime=jh.timestamp_to_time(self.time), price=self.price)
+
         for indicator in self.indicators_managers:
-            indicators_states |= {
-                f"{ind}__{indicator.route}": log for ind, log in indicator.log.items()
-            }
+            indicators_states |= {f"{ind}__{indicator.route}": log for ind, log in indicator.log.items()}
+
         self.write(**indicators_states)
 
     def write(self, **kwargs: Any) -> None:
@@ -57,15 +50,18 @@ class TradesWriter(CandlesProvider):
     def set_take_profits(self, take_profit: Union[tuple, list, np.ndarray]) -> None:
         if type(take_profit[0]) not in [list, tuple, np.ndarray]:
             take_profit = [take_profit]
+
         for i, tp in enumerate(take_profit):
             key = f"{self.trade_number}:{i}"
             if key not in self.take_profits:
                 self.take_profits[key] = []
+
             self.take_profits[key].append((self.time, tp[1]))
 
     def set_stop_losses(self, stop_loss: Union[tuple, list, np.ndarray]) -> None:
         if type(stop_loss[0]) not in [list, tuple, np.ndarray]:
             stop_loss = [stop_loss]
+
         for i, sl in enumerate(stop_loss):
             key = f"{self.trade_number}:{i}"
             if key not in self.stop_losses:

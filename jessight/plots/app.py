@@ -10,9 +10,15 @@ import streamlit as st
 from jessight.plots.candles_chart import CandleChart
 from jessight.plots.trades_table import draw_grid
 
+# TODO: Too much hardcoded values/getters, come up with a better way to do the needed task
+
 
 class App:
+    INSIGHT_FILE_PATH = "storage/insights"
+    INSIGHT_FILES_MASK = "*.pkl"
+
     def __init__(self):
+        # TODO: Refactor, this method should no know about hardcoded keys, provide all the relevant as func args
         self.trades_df = st.session_state.get("trades_df", None)
         self.chosen_file = st.session_state.get("chosen_file", None)
         self.charts_date = st.session_state.get("charts_date", None)
@@ -20,8 +26,9 @@ class App:
 
     def latest_insight_file(self):
         try:
-            path = Path("storage/insights")
-            list_of_files = path.glob("*.pkl")
+            path = Path(App.INSIGHT_FILE_PATH)
+            list_of_files = path.glob(app.INSIGHT_FILES_MASK)
+
             return max(list_of_files, key=os.path.getctime).absolute()
         except ValueError:
             return os.getcwd()
@@ -34,14 +41,15 @@ class App:
 
     def load_trades_df(self, insight_trades: dict):
         df = pd.DataFrame.from_dict(insight_trades, orient="index")
+
         if "Viewed" not in df.columns:
             df.insert(loc=0, column="Viewed", value=False)
+
         self.trades_df = df
 
     def browsing_files(self):
-        self.chosen_file = st.text_input(
-            "Insight file - The simulation result", self.chosen_file
-        )
+        self.chosen_file = st.text_input("Insight file - The simulation result", self.chosen_file)
+
         if self.chosen_file:
             with open(self.chosen_file, "rb") as f:
                 self.insights_data = pickle.load(f)

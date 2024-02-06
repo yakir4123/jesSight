@@ -1,5 +1,7 @@
 from st_aggrid import JsCode
 
+# TODO: Add documentation about this file if it is not redundant, otherwise remove it
+
 checkbox_renderer = JsCode(
     """
     class CheckboxRenderer{

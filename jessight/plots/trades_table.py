@@ -16,15 +16,9 @@ def draw_grid(
 ) -> AgGrid:
     formatter = formatter or {}
 
-    gb = GridOptionsBuilder.from_dataframe(
-        df, enableRowGroup=True, enableValue=True, enablePivot=True
-    )
+    gb = GridOptionsBuilder.from_dataframe(df, enableRowGroup=True, enableValue=True, enablePivot=True)
 
-    gb.configure_column(
-        "Viewed",
-        editable=True,
-        cellRenderer=checkbox_renderer,
-    )
+    gb.configure_column("Viewed", editable=True, cellRenderer=checkbox_renderer)
     gb.configure_default_column(
         editable=False,
         groupable=False,

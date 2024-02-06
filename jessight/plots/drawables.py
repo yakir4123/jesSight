@@ -21,9 +21,10 @@ class Marker:
         color: str = "#2196F3",
         text: str = "",
     ):
-        self.params = dict(
-            time=time, position=position, shape=shape, color=color, text=text
-        )
+        self.params = dict(time=time, position=position, shape=shape, color=color, text=text)
+
+    def set_timestamp(self, timestamp: int) -> None:
+        self.params["time"] = timestamp
 
     def to_dict(self):
         return self.params

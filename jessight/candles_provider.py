@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 
 import jesse.helpers as jh
-import const
+from jessight import const
 from jesse.store import store
 from jesse.enums import timeframes
 
@@ -15,7 +15,7 @@ class CandlesProvider:
         # TODO: Check whether symbol/asset is supported
         self.symbol = symbol
         self.timeframe = timeframe
-        self.timeframe_in_ms = jh.timeframe_to_one_minutes(self.timeframe) * const.MILLISECONDS_IN_HOUR
+        self.timeframe_in_ms = jh.timeframe_to_one_minutes(self.timeframe) * const.MILLISECONDS_IN_MINUTE
 
     @property
     def route(self):

@@ -24,7 +24,7 @@ class Marker:
         self.params = dict(time=time, position=position, shape=shape, color=color, text=text)
 
     def set_timestamp(self, timestamp: int) -> None:
-        self.params["time"] = datetime.utcfromtimestamp(timestamp)
+        self.params["time"] = timestamp
 
     def to_dict(self):
         return self.params

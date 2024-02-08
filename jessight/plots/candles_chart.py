@@ -5,12 +5,15 @@ from typing import Optional
 from dateutil import parser
 from streamlit.delta_generator import DeltaGenerator
 
-from lightweight_charts.util import jbool, line_style
 from lightweight_charts.widgets import StreamlitChart
-from lightweight_charts.abstract import Line
+
+from jessight.const import MILLISECONDS_IN_SECOND
 
 
 class CandleChart:
+    DEFAULT_VISIBLE_BACK_CANDLES = 22
+    DEFAULT_VISIBLE_FRONT_CANDLES = 23
+
     def __init__(
         self,
         insight: dict,
@@ -118,17 +121,17 @@ class CandleChart:
             df["time"] = pd.to_datetime(df["time"], unit="ms")
             chart_ind.set(df)
 
-    def goto(self, date: str):
-        timestamp = parser.parse(date).timestamp() * 1000
+    def goto_date(self, date: str):
+        timestamp = parser.parse(date).timestamp() * MILLISECONDS_IN_SECOND
         timeframe_in_minute = jh.timeframe_to_one_minutes(self.timeframe)
         arrow_time = jh.timestamp_to_arrow(timestamp)
         self.chart.set_visible_range(
-            arrow_time.shift(minutes=-22 * timeframe_in_minute).format(
-                "YYYY-MM-DD HH:mm"
-            ),
-            arrow_time.shift(minutes=23 * timeframe_in_minute).format(
-                "YYYY-MM-DD HH:mm"
-            ),
+            arrow_time.shift(
+                minutes=-CandleChart.DEFAULT_VISIBLE_BACK_CANDLES * timeframe_in_minute
+            ).format("YYYY-MM-DD HH:mm"),
+            arrow_time.shift(
+                minutes=CandleChart.DEFAULT_VISIBLE_FRONT_CANDLES * timeframe_in_minute
+            ).format("YYYY-MM-DD HH:mm"),
         )
 
     def plot(self):

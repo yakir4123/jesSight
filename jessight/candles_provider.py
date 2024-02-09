@@ -15,7 +15,9 @@ class CandlesProvider:
         # TODO: Check whether symbol/asset is supported
         self.symbol = symbol
         self.timeframe = timeframe
-        self.timeframe_in_ms = jh.timeframe_to_one_minutes(self.timeframe) * const.MILLISECONDS_IN_MINUTE
+        self.timeframe_in_ms = (
+            jh.timeframe_to_one_minutes(self.timeframe) * const.MILLISECONDS_IN_MINUTE
+        )
 
     @property
     def route(self):
@@ -27,7 +29,9 @@ class CandlesProvider:
 
     @property
     def get_1m_candles(self) -> np.ndarray:
-        return store.candles.get_candles(self.exchange, self.symbol, timeframes.MINUTE_1)
+        return store.candles.get_candles(
+            self.exchange, self.symbol, timeframes.MINUTE_1
+        )
 
     @property
     def curr_candle(self) -> np.ndarray:
@@ -44,28 +48,28 @@ class CandlesProvider:
     # TODO: Refactor properties, not makes sense to return ndarray as float
     @property
     def open(self) -> float:
-        return self.curr_candle[1]
+        return self.curr_candle[const.OPEN]
 
     @property
     def close(self) -> float:
-        return self.curr_candle[2]
+        return self.curr_candle[const.CLOSE]
 
     @property
     def price(self) -> float:
-        return self.curr_candle[2]
+        return self.curr_candle[const.CLOSE]
 
     @property
     def high(self) -> float:
-        return self.curr_candle[3]
+        return self.curr_candle[const.HIGH]
 
     @property
     def low(self) -> float:
-        return self.curr_candle[4]
+        return self.curr_candle[const.LOW]
 
     @property
     def volume(self) -> float:
-        return self.curr_candle[5]
+        return self.curr_candle[const.VOLUME]
 
     # Is it possible to get more than two-dimensional array?
     def is_green_candle(self, index: Union[int, slice] = -1) -> Union[bool, np.ndarray]:
-        return self.candles[index, 2] > self.candles[index, 1]
+        return self.candles[index, const.CLOSE] > self.candles[index, const.OPEN]

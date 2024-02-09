@@ -1,5 +1,9 @@
+"""
+Javascript code renderers for  streamlit widgets
+"""
 from st_aggrid import JsCode
 
+# checkbox widget for aggrid table
 checkbox_renderer = JsCode(
     """
     class CheckboxRenderer{

@@ -18,20 +18,6 @@ class App:
         self.charts_date = st.session_state.get("charts_date", None)
         self.insights_data = st.session_state.get("insights_data", None)
 
-    def latest_insight_file(self):
-        try:
-            path = Path("storage/insights")
-            list_of_files = path.glob("*.pkl")
-            return max(list_of_files, key=os.path.getctime).absolute()
-        except ValueError:
-            return os.getcwd()
-
-    def filename(self):
-        try:
-            return os.path.basename(self.chosen_file)
-        except FileNotFoundError:
-            return ""
-
     def load_trades_df(self, insight_trades: dict):
         df = pd.DataFrame.from_dict(insight_trades, orient="index")
         if "Viewed" not in df.columns:
@@ -97,7 +83,7 @@ class App:
             self.charts.append(chart)
 
         for chart in self.charts:
-            chart.goto(goto_date)
+            chart.goto_date(goto_date)
             chart.plot()
 
     def trades_manager_aggrid(self, df):
@@ -106,7 +92,7 @@ class App:
     def change_charts_date(self, date: str) -> None:
         self.charts_date = date
         for chart in self.charts:
-            chart.goto(date)
+            chart.goto_date(date)
             chart.plot()
 
     def go_to_date_bt(self) -> str:

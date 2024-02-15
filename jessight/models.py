@@ -18,10 +18,15 @@ class LineParamsModel(BaseModel):
 ConfigurableIndicator = Union[LineParamsModel]
 
 
+class LinePointModel(BaseModel):
+    name: str = ""
+    timestamp: int = 0
+    value: float = 0.0
+
+
 class LineModel(BaseModel):
     params: LineParamsModel
-    timestamps: list[int] = []
-    values: list[float] = []
+    line_points: list[LinePointModel] = []
 
 
 class MarkerModel(BaseModel):
@@ -39,19 +44,27 @@ class TrendLineModel(BaseModel):
     end_value: float
     round: bool = False
     color: Color = "#1E80F0"
-    width: int = (2,)
+    width: int = 2
     style: LINE_STYLE = "solid"
+
+
+class CandleColor(BaseModel):
+    color: Color = "#1E80F0"
+    time: int = 0
+
+
+Drawable = Union[MarkerModel, LinePointModel, TrendLineModel, CandleColor]
 
 
 class IndicatorModel(BaseModel):
     exchange: str
     symbol: str
     timeframe: str
-    lines: list[LineModel]
+    lines: dict[str, LineModel]
     markers: list[MarkerModel]
     trend_line: list[TrendLineModel]
     candles_colors: list[Color]
-    # candles: np.ndarray
+    candles: np.ndarray
 
 
 class Insight(BaseModel):

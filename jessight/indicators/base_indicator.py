@@ -5,13 +5,16 @@ from typing import Any, Union, Iterable
 from jessight.candles_provider import CandlesProvider
 import jessight.const as const
 import jessight.plots.const as pconst
-from jessight.models import MarkerModel, TrendLineModel, LineParamsModel, LineModel
-from jessight.plots.drawables import (
+from jessight.models import (
+    MarkerModel,
+    TrendLineModel,
+    LineParamsModel,
+    LineModel,
+    LinePointModel,
     ConfigurableIndicator,
-    Line,
-    Drawable,
-    LinePoint,
     CandleColor,
+    Drawable,
+    IndicatorModel,
 )
 
 
@@ -24,7 +27,7 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         self._chart_params = self._initial_chart_params()
         self.is_lazy = is_lazy
 
-    def insight(self) -> dict:
+    def insight(self) -> IndicatorModel:
         return self._chart_params
 
     @property
@@ -46,11 +49,11 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         if values is None:
             return
 
-        if not isinstance(values, Iterable):
+        if isinstance(values, Drawable):
             values = [values]
 
         for value in values:
-            if isinstance(value, LinePoint):
+            if isinstance(value, LinePointModel):
                 self._draw_line(value)
             if isinstance(value, MarkerModel):
                 self._draw_marker(value)
@@ -61,28 +64,26 @@ class BaseIndicator(CandlesProvider, abc.ABC):
 
     def _draw_candle_color(self, value: CandleColor) -> None:
         value.time = self.get_draw_timestamp()
-        self._chart_params[pconst.CANDLE_COLOR_CHART_PARAM].append(value.to_dict())
+        self._chart_params[pconst.CANDLE_COLOR_CHART_PARAM].append(value)
 
     def _draw_trend_line(self, value: TrendLineModel) -> None:
-        self._chart_params[pconst.TREND_LINE_CHART_PARAM].append(value.dict())
+        self._chart_params[pconst.TREND_LINE_CHART_PARAM].append(value)
 
     def _draw_marker(self, marker: MarkerModel) -> None:
         marker.time = self.get_draw_timestamp()
-        self._chart_params[pconst.MARKER_CHART_PARAM].append(marker.dict())
+        self._chart_params[pconst.MARKER_CHART_PARAM].append(marker)
 
-    def _draw_line(self, value: LinePoint) -> None:
-        timestamp = self.get_draw_timestamp()
+    def _draw_line(self, point: LinePointModel) -> None:
+        point.timestamp = self.get_draw_timestamp()
 
         try:
-            self._chart_params[pconst.LINE_CHART_PARAM][value.name].values.append(
-                value.value
-            )
-            self._chart_params[pconst.LINE_CHART_PARAM][value.name].timestamps.append(
-                timestamp
+            self._chart_params[pconst.LINE_CHART_PARAM][point.name].line_points.append(
+                point
             )
         except KeyError:
             raise KeyError(
-                f"{value.name} is not a line that has been initialized in `chart_params`, make sure to add it."
+                f"{point.name} is not a line that has been initialized in `chart_params`,"
+                f" make sure to add correspond LineParamsModel it."
             )
 
     def get_draw_timestamp(self) -> int:
@@ -103,29 +104,30 @@ class BaseIndicator(CandlesProvider, abc.ABC):
     ) -> ConfigurableIndicator | list[ConfigurableIndicator] | None:
         return None
 
-    def _initial_chart_params(self) -> Union[None, dict[str, Any]]:
+    def _initial_chart_params(self) -> IndicatorModel:
         """
         reorganize the chart params from list of dicts with key of indicator name to dictionary with indicator name
         as the key of the params
         """
         chart_params = self.chart_params()
-        res = {
-            pconst.MARKER_CHART_PARAM: [],
-            pconst.LINE_CHART_PARAM: {},
-            pconst.CANDLE_COLOR_CHART_PARAM: [],
-            pconst.TREND_LINE_CHART_PARAM: [],
-        }
+        indicator_modes = IndicatorModel(
+            exchange=self.exchange,
+            symbol=self.symbol,
+            timeframe=self.timeframe,
+            lines={},
+            markers=[],
+            trend_line=[],
+            candles_colors=[],
+        )
 
         if chart_params is None:
-            return res
+            return indicator_modes
 
         if isinstance(chart_params, ConfigurableIndicator):
             chart_params = [chart_params]
 
         for params in chart_params:
             if isinstance(params, LineParamsModel):
-                res[pconst.LINE_CHART_PARAM][params.name] = LineModel(
-                    params=params.dict()
-                )
+                indicator_modes.lines[params.name] = LineModel(params=params)
 
-        return res
+        return indicator_modes

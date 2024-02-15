@@ -83,14 +83,10 @@ class CandleChart:
 
     def create_line(self, indicator) -> None:
         chart_ind = self.chart.create_line(**indicator["params"])
-        df = pd.DataFrame.from_dict(
-            {
-                "time": indicator["time"],
-                indicator["name"]: indicator["values"],
-            },
-            orient="columns",
+        df = pd.DataFrame(
+            indicator["line_points"],
         )
-        df["time"] = pd.to_datetime(df["time"], unit="ms")
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         chart_ind.set(df)
 
     def _add_tp_lines(self, take_profits):

@@ -5,14 +5,13 @@ from typing import Any, Union, Iterable
 from jessight.candles_provider import CandlesProvider
 import jessight.const as const
 import jessight.plots.const as pconst
-from jessight.models import MarkerModel
+from jessight.models import MarkerModel, TrendLineModel
 from jessight.plots.drawables import (
     ConfigurableIndicator,
     Line,
     Drawable,
     LinePoint,
     CandleColor,
-    TrendLine,
 )
 
 
@@ -57,15 +56,15 @@ class BaseIndicator(CandlesProvider, abc.ABC):
                 self._draw_marker(value)
             if isinstance(value, CandleColor):
                 self._draw_candle_color(value)
-            if isinstance(value, TrendLine):
+            if isinstance(value, TrendLineModel):
                 self._draw_trend_line(value)
 
     def _draw_candle_color(self, value: CandleColor) -> None:
         value.time = self.get_draw_timestamp()
         self._chart_params[pconst.CANDLE_COLOR_CHART_PARAM].append(value.to_dict())
 
-    def _draw_trend_line(self, value: TrendLine) -> None:
-        self._chart_params[pconst.TREND_LINE_CHART_PARAM].append(value.to_dict())
+    def _draw_trend_line(self, value: TrendLineModel) -> None:
+        self._chart_params[pconst.TREND_LINE_CHART_PARAM].append(value.dict())
 
     def _draw_marker(self, marker: MarkerModel) -> None:
         marker.time = self.get_draw_timestamp()

@@ -5,7 +5,7 @@ from typing import Any, Union, Iterable
 from jessight.candles_provider import CandlesProvider
 import jessight.const as const
 import jessight.plots.const as pconst
-from jessight.models import MarkerModel, TrendLineModel
+from jessight.models import MarkerModel, TrendLineModel, LineParamsModel, LineModel
 from jessight.plots.drawables import (
     ConfigurableIndicator,
     Line,
@@ -74,10 +74,10 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         timestamp = self.get_draw_timestamp()
 
         try:
-            self._chart_params[pconst.LINE_CHART_PARAM][value.name]._values.append(
+            self._chart_params[pconst.LINE_CHART_PARAM][value.name].values.append(
                 value.value
             )
-            self._chart_params[pconst.LINE_CHART_PARAM][value.name]._time.append(
+            self._chart_params[pconst.LINE_CHART_PARAM][value.name].timestamps.append(
                 timestamp
             )
         except KeyError:
@@ -100,7 +100,7 @@ class BaseIndicator(CandlesProvider, abc.ABC):
 
     def chart_params(
         self,
-    ) -> Union[None, ConfigurableIndicator, list[ConfigurableIndicator]]:
+    ) -> ConfigurableIndicator | list[ConfigurableIndicator] | None:
         return None
 
     def _initial_chart_params(self) -> Union[None, dict[str, Any]]:
@@ -123,8 +123,9 @@ class BaseIndicator(CandlesProvider, abc.ABC):
             chart_params = [chart_params]
 
         for params in chart_params:
-            if isinstance(params, Line):
-                param_name = params.name
-                res[pconst.LINE_CHART_PARAM][param_name] = params
+            if isinstance(params, LineParamsModel):
+                res[pconst.LINE_CHART_PARAM][params.name] = LineModel(
+                    params=params.dict()
+                )
 
         return res

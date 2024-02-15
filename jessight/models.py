@@ -1,3 +1,5 @@
+from typing import Union
+
 import numpy as np
 from lightweight_charts.util import LINE_STYLE, MARKER_POSITION, MARKER_SHAPE
 from pydantic import BaseModel
@@ -13,11 +15,13 @@ class LineParamsModel(BaseModel):
     price_label: bool = True
 
 
+ConfigurableIndicator = Union[LineParamsModel]
+
+
 class LineModel(BaseModel):
-    name: str
-    values: list[float]
-    time: list[int]
     params: LineParamsModel
+    timestamps: list[int] = []
+    values: list[float] = []
 
 
 class MarkerModel(BaseModel):

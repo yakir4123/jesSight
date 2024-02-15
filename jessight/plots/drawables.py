@@ -4,6 +4,8 @@ from typing import Union
 import pandas as pd
 from lightweight_charts.util import LINE_STYLE, MARKER_POSITION, MARKER_SHAPE, NUM
 
+from jessight.models import LineParamsModel
+
 
 class LinePoint:
     def __init__(self, name: str, value: NUM):
@@ -21,7 +23,9 @@ class Marker:
         color: str = "#2196F3",
         text: str = "",
     ):
-        self.params = dict(time=time, position=position, shape=shape, color=color, text=text)
+        self.params = dict(
+            time=time, position=position, shape=shape, color=color, text=text
+        )
 
     def set_timestamp(self, timestamp: int) -> None:
         self.params["time"] = timestamp
@@ -106,5 +110,5 @@ class Line:
         self._time.append(point.time)
 
 
-ConfigurableIndicator = Union[Line]
+ConfigurableIndicator = Union[Line, LineParamsModel]
 Drawable = Union[LinePoint, Marker, CandleColor, TrendLine]

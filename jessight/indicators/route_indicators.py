@@ -26,7 +26,7 @@ class RouteIndicators(CandlesProvider):
         for indicator in self.indicators.values():
             indicator_insights = indicator.insight()
             for line in indicator_insights["lines"].values():
-                res["lines"].append(line.to_dict())
+                res["lines"].append(line.dict())
             res["markers"] += indicator_insights["markers"]
             res["trend_line"] += indicator_insights["trend_line"]
             res["candles_colors"] += indicator_insights["candles_colors"]

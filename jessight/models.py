@@ -1,34 +1,10 @@
-from datetime import datetime
-
 import numpy as np
-import pandas as pd
-from lightweight_charts.util import LINE_STYLE, MARKER_POSITION, MARKER_SHAPE, TIME
+from lightweight_charts.util import LINE_STYLE, MARKER_POSITION, MARKER_SHAPE
 from pydantic import BaseModel
 from pydantic.color import Color
 
 
-class InsightModel(BaseModel):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-        cls = self.__class__
-        for field_name, field_type in cls.__annotations__.items():
-            if field_type == TIME:
-                setattr(
-                    self,
-                    field_name,
-                    self._convert_to_timestamp(self.__dict__[field_name]),
-                )
-
-    @staticmethod
-    def _convert_to_timestamp(value):
-        if isinstance(value, datetime):
-            return pd.Timestamp(value)
-        elif isinstance(value, int):
-            return pd.Timestamp(value, unit="ms")
-        return value
-
-
-class LineParamsModel(InsightModel):
+class LineParamsModel(BaseModel):
     name: str = ""
     color: Color = "rgba(214, 237, 255, 0.6)"
     style: LINE_STYLE = "solid"
@@ -37,25 +13,25 @@ class LineParamsModel(InsightModel):
     price_label: bool = True
 
 
-class LineModel(InsightModel):
+class LineModel(BaseModel):
     name: str
     values: list[float]
-    time: list[TIME]
+    time: list[int]
     params: LineParamsModel
 
 
-class MarkerModel(InsightModel):
-    time: TIME
+class MarkerModel(BaseModel):
+    time: int = 0
     position: MARKER_POSITION = "below"
     shape: MARKER_SHAPE = "arrow_up"
     color: Color = "#2196F3"
     text: str = ""
 
 
-class TrendLineModel(InsightModel):
-    start_time: TIME
+class TrendLineModel(BaseModel):
+    start_time: int
     start_value: float
-    end_time: TIME
+    end_time: int
     end_value: float
     round: bool = False
     color: Color = "#1E80F0"
@@ -63,7 +39,7 @@ class TrendLineModel(InsightModel):
     style: LINE_STYLE = "solid"
 
 
-class IndicatorModel(InsightModel):
+class IndicatorModel(BaseModel):
     exchange: str
     symbol: str
     timeframe: str
@@ -71,10 +47,10 @@ class IndicatorModel(InsightModel):
     markers: list[MarkerModel]
     trend_line: list[TrendLineModel]
     candles_colors: list[Color]
-    candles: np.ndarray
+    # candles: np.ndarray
 
 
-class Insight(InsightModel):
+class Insight(BaseModel):
     indicators: list[IndicatorModel]
     trades: dict
     start_simulation_timestamp: int

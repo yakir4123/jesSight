@@ -6,15 +6,15 @@ from jessight.candles_provider import CandlesProvider
 import jessight.const as const
 import jessight.plots.const as pconst
 from jessight.models import (
-    MarkerModel,
-    TrendLineModel,
+    Marker,
+    TrendLine,
     LineParamsModel,
-    LineModel,
-    LinePointModel,
+    Line,
+    LinePoint,
     ConfigurableIndicator,
     CandleColor,
     Drawable,
-    IndicatorModel,
+    RouteModel,
 )
 
 
@@ -27,7 +27,7 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         self._chart_params = self._initial_chart_params()
         self.is_lazy = is_lazy
 
-    def insight(self) -> IndicatorModel:
+    def insight(self) -> RouteModel:
         return self._chart_params
 
     @property
@@ -53,27 +53,27 @@ class BaseIndicator(CandlesProvider, abc.ABC):
             values = [values]
 
         for value in values:
-            if isinstance(value, LinePointModel):
+            if isinstance(value, LinePoint):
                 self._draw_line(value)
-            if isinstance(value, MarkerModel):
+            if isinstance(value, Marker):
                 self._draw_marker(value)
             if isinstance(value, CandleColor):
                 self._draw_candle_color(value)
-            if isinstance(value, TrendLineModel):
+            if isinstance(value, TrendLine):
                 self._draw_trend_line(value)
 
     def _draw_candle_color(self, value: CandleColor) -> None:
         value.time = self.get_draw_timestamp()
         self._chart_params.candles_colors.append(value)
 
-    def _draw_trend_line(self, value: TrendLineModel) -> None:
+    def _draw_trend_line(self, value: TrendLine) -> None:
         self._chart_params.trend_lines.append(value)
 
-    def _draw_marker(self, marker: MarkerModel) -> None:
+    def _draw_marker(self, marker: Marker) -> None:
         marker.time = self.get_draw_timestamp()
         self._chart_params.markers.append(marker)
 
-    def _draw_line(self, point: LinePointModel) -> None:
+    def _draw_line(self, point: LinePoint) -> None:
         point.timestamp = self.get_draw_timestamp()
 
         try:
@@ -102,13 +102,13 @@ class BaseIndicator(CandlesProvider, abc.ABC):
     ) -> ConfigurableIndicator | list[ConfigurableIndicator] | None:
         return None
 
-    def _initial_chart_params(self) -> IndicatorModel:
+    def _initial_chart_params(self) -> RouteModel:
         """
         reorganize the chart params from list of dicts with key of indicator name to dictionary with indicator name
         as the key of the params
         """
         chart_params = self.chart_params()
-        indicator_modes = IndicatorModel()
+        indicator_modes = RouteModel()
 
         if chart_params is None:
             return indicator_modes
@@ -118,6 +118,6 @@ class BaseIndicator(CandlesProvider, abc.ABC):
 
         for params in chart_params:
             if isinstance(params, LineParamsModel):
-                indicator_modes.lines[params.name] = LineModel(params=params)
+                indicator_modes.lines[params.name] = Line(params=params)
 
         return indicator_modes

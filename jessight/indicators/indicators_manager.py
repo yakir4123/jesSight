@@ -4,7 +4,7 @@ import jesse.helpers as jh
 from jesse.routes import router
 from jessight.indicators.base_indicator import BaseIndicator
 from jessight.indicators.route_indicators import RouteIndicators
-from jessight.models import IndicatorModel
+from jessight.models import RouteModel
 
 
 class IndicatorsManager:
@@ -57,7 +57,7 @@ class IndicatorsManager:
         for ind in self._indicators.values():
             ind.chart_params()
 
-    def insight(self) -> list[IndicatorModel]:
+    def insight(self) -> list[RouteModel]:
         res = []
         for route_ind in self._indicators.values():
             res.append(route_ind.insight())

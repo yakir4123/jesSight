@@ -110,9 +110,7 @@ class InsightStrategy(Strategy, ABC):
         self._save_insight_file()
 
     def _save_insight_file(self):
-        insight = self.insight()
-        insight = insight.json()
-        insight = json.loads(insight)
+        insight = json.loads(self.insight().json())
         insight_path = Path("storage/insights")
         insight_path.mkdir(parents=True, exist_ok=True)
         with open(insight_path / f"{int(time.time())}.pkl", "wb") as f:

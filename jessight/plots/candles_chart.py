@@ -67,12 +67,12 @@ class CandleChart:
         self.df["color"] = resulting_colors
 
     def _set_indicators(self, insight: dict):
-        for indicator in insight["lines"]:
+        for indicator in insight["lines"].values():
             self.create_line(indicator)
         insight["markers"].sort(key=lambda x: x["time"])
         for marker in insight["markers"]:
             self.create_marker(marker)
-        for trend_line in insight["trend_line"]:
+        for trend_line in insight["trend_lines"]:
             self.create_trend_line(trend_line)
 
     def create_trend_line(self, trend_line) -> None:
@@ -86,7 +86,11 @@ class CandleChart:
         df = pd.DataFrame(
             indicator["line_points"],
         )
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df["time"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df[indicator["params"]["name"]] = df["value"]
+        del df["name"]
+        del df["timestamp"]
+        del df["value"]
         chart_ind.set(df)
 
     def _add_tp_lines(self, take_profits):

@@ -64,22 +64,20 @@ class BaseIndicator(CandlesProvider, abc.ABC):
 
     def _draw_candle_color(self, value: CandleColor) -> None:
         value.time = self.get_draw_timestamp()
-        self._chart_params[pconst.CANDLE_COLOR_CHART_PARAM].append(value)
+        self._chart_params.candles_colors.append(value)
 
     def _draw_trend_line(self, value: TrendLineModel) -> None:
-        self._chart_params[pconst.TREND_LINE_CHART_PARAM].append(value)
+        self._chart_params.trend_lines.append(value)
 
     def _draw_marker(self, marker: MarkerModel) -> None:
         marker.time = self.get_draw_timestamp()
-        self._chart_params[pconst.MARKER_CHART_PARAM].append(marker)
+        self._chart_params.markers.append(marker)
 
     def _draw_line(self, point: LinePointModel) -> None:
         point.timestamp = self.get_draw_timestamp()
 
         try:
-            self._chart_params[pconst.LINE_CHART_PARAM][point.name].line_points.append(
-                point
-            )
+            self._chart_params.lines[point.name].line_points.append(point)
         except KeyError:
             raise KeyError(
                 f"{point.name} is not a line that has been initialized in `chart_params`,"
@@ -110,15 +108,7 @@ class BaseIndicator(CandlesProvider, abc.ABC):
         as the key of the params
         """
         chart_params = self.chart_params()
-        indicator_modes = IndicatorModel(
-            exchange=self.exchange,
-            symbol=self.symbol,
-            timeframe=self.timeframe,
-            lines={},
-            markers=[],
-            trend_line=[],
-            candles_colors=[],
-        )
+        indicator_modes = IndicatorModel()
 
         if chart_params is None:
             return indicator_modes

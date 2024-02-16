@@ -57,17 +57,25 @@ Drawable = Union[MarkerModel, LinePointModel, TrendLineModel, CandleColor]
 
 
 class IndicatorModel(BaseModel):
-    exchange: str
-    symbol: str
-    timeframe: str
-    lines: dict[str, LineModel]
-    markers: list[MarkerModel]
-    trend_line: list[TrendLineModel]
-    candles_colors: list[Color]
-    candles: np.ndarray
+    exchange: str = ""
+    symbol: str = ""
+    timeframe: str = ""
+    lines: dict[str, LineModel] = {}
+    markers: list[MarkerModel] = []
+    trend_lines: list[TrendLineModel] = []
+    candles_colors: list[CandleColor] = []
+    candles: np.ndarray = np.array([])
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class Insight(BaseModel):
     indicators: list[IndicatorModel]
     trades: dict
     start_simulation_timestamp: int
+
+    class Config:
+        json_encoders = {
+            np.ndarray: lambda a: a.tolist(),
+        }

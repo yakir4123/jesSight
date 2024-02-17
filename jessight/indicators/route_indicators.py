@@ -2,6 +2,7 @@ from typing import Any
 
 from jessight.indicators.base_indicator import BaseIndicator
 from jessight.candles_provider import CandlesProvider
+from jessight.models import RouteModel
 
 
 class RouteIndicators(CandlesProvider):
@@ -12,8 +13,8 @@ class RouteIndicators(CandlesProvider):
     def __getitem__(self, key: str) -> BaseIndicator:
         return self.indicators[key]
 
-    def insight(self) -> dict:
-        res = dict(
+    def insight(self) -> RouteModel:
+        res = RouteModel(
             exchange=self.exchange,
             symbol=self.symbol,
             timeframe=self.timeframe,
@@ -21,15 +22,14 @@ class RouteIndicators(CandlesProvider):
             markers=[],
             trend_line=[],
             candles_colors=[],
-            candles=self.candles,
+            candles=self.candles.tolist(),
         )
         for indicator in self.indicators.values():
             indicator_insights = indicator.insight()
-            for line in indicator_insights["lines"].values():
-                res["lines"].append(line.to_dict())
-            res["markers"] += indicator_insights["markers"]
-            res["trend_line"] += indicator_insights["trend_line"]
-            res["candles_colors"] += indicator_insights["candles_colors"]
+            res.lines |= indicator_insights.lines
+            res.markers += indicator_insights.markers
+            res.trend_lines += indicator_insights.trend_lines
+            res.candles_colors += indicator_insights.candles_colors
         return res
 
     def add(self, indicator: BaseIndicator) -> None:

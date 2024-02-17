@@ -1,3 +1,4 @@
+import json
 import time
 import pickle
 from abc import ABC
@@ -8,6 +9,7 @@ import numpy as np
 from jesse.models import Order
 from jesse.strategies import Strategy
 from jessight.indicators.indicators_manager import IndicatorsManager
+from jessight.models import Insight
 from jessight.utils.trades_writer import TradesWriter
 
 
@@ -108,19 +110,18 @@ class InsightStrategy(Strategy, ABC):
         self._save_insight_file()
 
     def _save_insight_file(self):
-        insight = self.insight()
+        insight = json.loads(self.insight().json())
         insight_path = Path("storage/insights")
         insight_path.mkdir(parents=True, exist_ok=True)
         with open(insight_path / f"{int(time.time())}.pkl", "wb") as f:
             pickle.dump(insight, f)
 
-    def insight(self):
-        res = {
-            "indicators": self.indicator_managers.insight(),
-            "trades": self.trades_writer.to_dict(),
-            "start_simulation_timestamp": self.start_simulation_timestamp,
-        }
-        return res
+    def insight(self) -> Insight:
+        return Insight(
+            indicators=self.indicator_managers.insight(),
+            trades=self.trades_writer.to_dict(),
+            start_simulation_timestamp=self.start_simulation_timestamp,
+        )
 
     @property
     def is_position_updated(self) -> bool:

@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import jesse.helpers as jh
 
@@ -8,6 +10,7 @@ from streamlit.delta_generator import DeltaGenerator
 from lightweight_charts.widgets import StreamlitChart
 
 from jessight.const import MILLISECONDS_IN_SECOND
+from jessight.models import RouteModel, Line, Marker, TrendLine
 
 
 class CandleChart:
@@ -16,14 +19,14 @@ class CandleChart:
 
     def __init__(
         self,
-        insight: dict,
+        insight: RouteModel,
         height: int,
         col: Optional[DeltaGenerator] = None,
         take_profits: Optional[dict] = None,
         stop_losses: Optional[dict] = None,
     ):
         self.df = pd.DataFrame(
-            insight["candles"],
+            insight.candles,
             columns=["date", "open", "close", "high", "low", "volume"],
         )
         self._set_candles_colors(insight)
@@ -31,9 +34,9 @@ class CandleChart:
             "%Y-%m-%d %H:%M:%S"
         )
         self.col = col
-        self.exchange = insight["exchange"]
-        self.symbol = insight["symbol"]
-        self.timeframe = insight["timeframe"]
+        self.exchange = insight.exchange
+        self.symbol = insight.symbol
+        self.timeframe = insight.timeframe
         self.chart = StreamlitChart(height=height)
         self._set_chart()
         self._set_indicators(insight)
@@ -50,15 +53,17 @@ class CandleChart:
         self.chart.legend(visible=True)
         self.chart.set(self.df)
 
-    def _set_candles_colors(self, insight: dict):
-        if len(insight["candles_colors"]) == 0:
+    def _set_candles_colors(self, insight: RouteModel):
+        if len(insight.candles_colors) == 0:
             return
 
         self.df["color"] = "rgba(39, 157, 130, 100)"
         self.df.loc[
             self.df["close"] < self.df["open"], "color"
         ] = "rgba(200, 97, 100, 100)"
-        colors_df = pd.DataFrame(insight["candles_colors"])
+        colors_df = pd.DataFrame(
+            map(lambda c: json.loads(c.json()), insight.candles_colors)
+        )
         colors_df.rename(columns={"time": "date", "value": "color"}, inplace=True)
         merged_df = pd.merge(
             self.df, colors_df, on="date", how="left", suffixes=("_df1", "_df2")
@@ -66,31 +71,30 @@ class CandleChart:
         resulting_colors = merged_df["color_df2"].combine_first(merged_df["color_df1"])
         self.df["color"] = resulting_colors
 
-    def _set_indicators(self, insight: dict):
-        for indicator in insight["lines"]:
+    def _set_indicators(self, insight: RouteModel):
+        for indicator in insight.lines.values():
             self.create_line(indicator)
-        insight["markers"].sort(key=lambda x: x["time"])
-        for marker in insight["markers"]:
+        insight.markers.sort(key=lambda x: x.time)
+        for marker in insight.markers:
             self.create_marker(marker)
-        for trend_line in insight["trend_line"]:
+        for trend_line in insight.trend_lines:
             self.create_trend_line(trend_line)
 
-    def create_trend_line(self, trend_line) -> None:
-        self.chart.trend_line(**trend_line)
+    def create_trend_line(self, trend_line: TrendLine) -> None:
+        self.chart.trend_line(**trend_line.dict())
 
-    def create_marker(self, marker) -> None:
-        self.chart.marker(**marker)
+    def create_marker(self, marker: Marker) -> None:
+        self.chart.marker(**marker.dict())
 
-    def create_line(self, indicator) -> None:
-        chart_ind = self.chart.create_line(**indicator["params"])
-        df = pd.DataFrame.from_dict(
-            {
-                "time": indicator["time"],
-                indicator["name"]: indicator["values"],
-            },
-            orient="columns",
+    def create_line(self, indicator: Line) -> None:
+        chart_ind = self.chart.create_line(**indicator.params.dict())
+        df = pd.DataFrame(
+            json.loads(indicator.line_points.json()),
         )
-        df["time"] = pd.to_datetime(df["time"], unit="ms")
+        df["time"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df[indicator.params.name] = df["value"]
+        del df["timestamp"]
+        del df["value"]
         chart_ind.set(df)
 
     def _add_tp_lines(self, take_profits):

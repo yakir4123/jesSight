@@ -55,6 +55,8 @@ class TradesWriter(CandlesProvider):
         return self._trade_number
 
     def set_take_profits(self, take_profit: Union[tuple, list, np.ndarray]) -> None:
+        if take_profit is None:
+            return
         if type(take_profit[0]) not in [list, tuple, np.ndarray]:
             take_profit = [take_profit]
         for i, tp in enumerate(take_profit):
@@ -64,6 +66,8 @@ class TradesWriter(CandlesProvider):
             self.take_profits[key].append((self.time, tp[1]))
 
     def set_stop_losses(self, stop_loss: Union[tuple, list, np.ndarray]) -> None:
+        if stop_loss is None:
+            return
         if type(stop_loss[0]) not in [list, tuple, np.ndarray]:
             stop_loss = [stop_loss]
         for i, sl in enumerate(stop_loss):

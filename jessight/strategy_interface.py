@@ -1,10 +1,19 @@
 from abc import ABC, abstractmethod
 
+from jessight.exceptions.UnchangeableCapital import UnchangeableCapitalException
+
 # TODO: Add more relevant methods what should exist in all strategies
 # TODO: Add type hints for every method
 
 
 class Strategy(ABC):
+	# TODO: Add logger to this class
+	def __init__(self):
+		self._name = self.__class__.__name__
+
+	@property
+	def name(self) -> str:
+		return self._name
 
 	@abstractmethod
 	def before(self):

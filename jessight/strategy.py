@@ -34,16 +34,18 @@ class InsightStrategy(Strategy, ABC):
     def _initialize(self) -> None:
         self.indicator_managers = IndicatorsManager(self.exchange, self.symbol, self.timeframe, self.indicators())
         self.trades_writer = TradesWriter(self.exchange, self.symbol, self.timeframe, self.indicator_managers)
-        self.risk_manager = RiskManager(self.strategies())
+
+        self.risk_manager = self.risk_management()
         self.start_simulation_timestamp = self.time
 
     # Intended to be implemented by the child object
-    def strategies(self) -> List[CustomStrategy]:
+    @abstractmethod
+    def risk_management(self) -> RiskManager:
         pass
 
     # Intended to be implemented by the child object
     def indicators(self) -> List[BaseIndicator]:
-        pass
+        return []
 
     def before(self) -> None:
         if not self._is_initialized:

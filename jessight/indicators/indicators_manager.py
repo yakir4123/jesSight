@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 import jesse.helpers as jh
 from jesse.routes import router
@@ -13,6 +13,7 @@ class IndicatorsManager:
         default_exchange: str = "",
         default_symbol: str = "",
         default_timeframe: str = "",
+        indicators: List[BaseIndicator] | None = None,
     ):
         self.default_exchange = default_exchange
         self.default_symbol = default_symbol
@@ -20,14 +21,21 @@ class IndicatorsManager:
         self._indicators: dict[str, RouteIndicators] = {}
         self._is_draw_lazy_indicators: bool = False
         self._is_updated_lazy_indicators: bool = False
+
         for route in router.all_formatted_routes:
             if "strategy" in route:
                 del route["strategy"]
             self._indicators[jh.key(**route)] = RouteIndicators(**route)
 
-    def add(self, *indicators: BaseIndicator):
+        if indicators is not None:
+            self.extend_indicators(indicators)
+
+    def extend_indicators(self, indicators: List[BaseIndicator]):
         for indicator in indicators:
-            self._indicators[indicator.route].add(indicator)
+            self.add_indicator(indicator)
+
+    def add_indicator(self, indicator: BaseIndicator):
+        self._indicators[indicator.route].add(indicator)
 
     def update(self) -> None:
         self._is_draw_lazy_indicators = False

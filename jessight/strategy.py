@@ -1,10 +1,10 @@
+import logging
 import json
 import time
 import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List
-from enum import Enum
 
 import numpy as np
 
@@ -32,7 +32,13 @@ class InsightStrategy(Strategy, ABC):
         self.start_simulation_timestamp: float = 0
 
     def _initialize(self) -> None:
-        self.indicator_managers = IndicatorsManager(self.exchange, self.symbol, self.timeframe, self.indicators())
+        log = logging.LoggerAdapter(logging.getLogger())
+
+        indicators = self.indicators()
+        log.extra = {"indicators": map(lambda indicator: indicator.name(), indicators)}
+        log.info("Initializing InsightStrategy")
+
+        self.indicator_managers = IndicatorsManager(self.exchange, self.symbol, self.timeframe, indicators)
         self.trades_writer = TradesWriter(self.exchange, self.symbol, self.timeframe, self.indicator_managers)
 
         self.risk_manager = self.risk_management()

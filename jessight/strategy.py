@@ -1,19 +1,29 @@
 import json
 import time
 import pickle
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import List
+from enum import Enum
 
 import numpy as np
 
+
 from jesse.models import Order
 from jesse.strategies import Strategy
+
 from jessight.indicators.indicators_manager import IndicatorsManager
 from jessight.models import Insight
 from jessight.utils.trades_writer import TradesWriter
+from jessight.indicators.base_indicator import BaseIndicator
+from jessight.strategy_interface import Strategy as CustomStrategy
+from jessight.risk_manager import RiskManager
+from jessight.events.events import Event
 
 
 class InsightStrategy(Strategy, ABC):
+    OUTPUT_FILE_PATH = "storage/insights"
+
     def __init__(self) -> None:
         super().__init__()
         self._is_initialized = False
@@ -22,26 +32,23 @@ class InsightStrategy(Strategy, ABC):
         self.start_simulation_timestamp: float = 0
 
     def _initialize(self) -> None:
-        if self._is_initialized:
-            return
+        self.indicator_managers = IndicatorsManager(self.exchange, self.symbol, self.timeframe, self.indicators())
+        self.trades_writer = TradesWriter(self.exchange, self.symbol, self.timeframe, self.indicator_managers)
+        self.risk_manager = RiskManager(self.strategies())
         self.start_simulation_timestamp = self.time
-        self._is_initialized = True
-        self.indicator_managers = IndicatorsManager(
-            self.exchange, self.symbol, self.timeframe
-        )
-        self.trades_writer = TradesWriter(
-            self.exchange,
-            self.symbol,
-            self.timeframe,
-            indicators_managers=self.indicator_managers,
-        )
-        self.initialize()
 
-    def initialize(self):
+    # Intended to be implemented by the child object
+    def strategies(self) -> List[CustomStrategy]:
+        pass
+
+    # Intended to be implemented by the child object
+    def indicators(self) -> List[BaseIndicator]:
         pass
 
     def before(self) -> None:
-        self._initialize()
+        if not self._is_initialized:
+            self._initialize()
+
         self.indicator_managers.update()
         self.indicator_managers.draw()
 
@@ -49,7 +56,7 @@ class InsightStrategy(Strategy, ABC):
         self.trades_writer.new_trade()
         self.trades_writer.write_trade_number()
         self.trades_writer.write(
-            event="go_long",
+            event=Event.GO_LONG,
             entry=self.buy,
             take_profit=self.take_profit,
             stop_loss=self.stop_loss,
@@ -62,7 +69,7 @@ class InsightStrategy(Strategy, ABC):
         self.trades_writer.new_trade()
         self.trades_writer.write_trade_number()
         self.trades_writer.write(
-            event="go_short",
+            event=Event.GO_SHORT,
             entry=self.sell,
             take_profit=self.take_profit,
             stop_loss=self.stop_loss,
@@ -74,14 +81,14 @@ class InsightStrategy(Strategy, ABC):
     def on_cancel(self) -> None:
         self.trades_writer.write_trade_number()
         self.trades_writer.write(
-            event="on_cancel",
+            event=Event.ON_CANCEL,
         )
         self.trades_writer.indicators_snapshot()
 
     def on_open_position(self, order: Order) -> None:
         self.trades_writer.write_trade_number()
         self.trades_writer.write(
-            event="on_open_position",
+            event=Event.ON_OPEN_POSITION,
         )
         self.trades_writer.indicators_snapshot()
 
@@ -89,7 +96,7 @@ class InsightStrategy(Strategy, ABC):
         if not self.is_position_updated:
             return
         self.trades_writer.write(
-            event="update_position",
+            event=Event.UPDATE_POSITION,
             entry=self.sell,
             take_profit=self.take_profit,
             stop_loss=self.stop_loss,
@@ -101,9 +108,9 @@ class InsightStrategy(Strategy, ABC):
     def on_close_position(self, order: Order) -> None:
         self.trades_writer.write_trade_number()
         if order.is_take_profit:
-            self.trades_writer.write(event="on_tp_close", take_profit=order.price)
+            self.trades_writer.write(event=Event.ON_TP_CLOSE, take_profit=order.price)
         else:
-            self.trades_writer.write(event="on_sl_close", stop_loss=order.price)
+            self.trades_writer.write(event=Event.ON_SL_CLOSE, stop_loss=order.price)
         self.trades_writer.indicators_snapshot()
 
     def terminate(self):
@@ -111,7 +118,7 @@ class InsightStrategy(Strategy, ABC):
 
     def _save_insight_file(self):
         insight = json.loads(self.insight().json())
-        insight_path = Path("storage/insights")
+        insight_path = Path(InsightStrategy.OUTPUT_FILE_PATH)
         insight_path.mkdir(parents=True, exist_ok=True)
         with open(insight_path / f"{int(time.time())}.pkl", "wb") as f:
             pickle.dump(insight, f)

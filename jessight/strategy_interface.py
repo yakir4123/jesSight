@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 
 from jessight.exceptions.UnchangeableCapital import UnchangeableCapitalException
@@ -7,7 +8,6 @@ from jessight.exceptions.UnchangeableCapital import UnchangeableCapitalException
 
 
 class Strategy(ABC):
-	# TODO: Add logger to this class
 	def __init__(self):
 		self._name = self.__class__.__name__
 
